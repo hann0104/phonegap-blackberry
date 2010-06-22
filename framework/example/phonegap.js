@@ -850,7 +850,15 @@ function Store() {
 };
 
 Store.prototype.getAll = function(successCallback,errorCallback) {
-	this.loadAll_success = successCallback;
+	// Wrap the success callback with a little object parses that decodes the keys and composes into a new JSON obj.
+	// We do this because we encode all keys as they go into offline storage, so we have to decode on the way back.
+	this.loadAll_success = function(obj){
+		var trueObj = {};
+		for (var prop in obj) {
+			trueObj[decodeURIComponent(prop)] = obj[prop];
+		}
+		successCallback(trueObj);
+	}
 	this.loadAll_error = errorCallback;
 	PhoneGap.exec("store",["loadAll"]);
 }
@@ -858,27 +866,26 @@ Store.prototype.getAll = function(successCallback,errorCallback) {
 Store.prototype.put = function(successCallback,errorCallback,key,data) {
 	this.save_success = successCallback;
 	this.save_error = errorCallback;
-	PhoneGap.exec("store",["save",key,data]);
+	PhoneGap.exec("store",["save",encodeURIComponent(key),data]);
 }
 
 Store.prototype.get = function(successCallback,errorCallback,key) {
 	this.load_success = successCallback;
 	this.load_error = errorCallback;
-	PhoneGap.exec("store",["load",key]);
+	PhoneGap.exec("store",["load",encodeURIComponent(key)]);
 }
 
 Store.prototype.remove = function(successCallback, errorCallback, key) {
 	this.remove_success = successCallback;
 	this.remove_error = errorCallback;
-	PhoneGap.exec("store", ["remove",key]);
+	PhoneGap.exec("store", ["remove",encodeURIComponent(key)]);
 }
 Store.prototype.nuke = function(successCallback, errorCallback) {
 	this.nuke_success = successCallback;
 	this.nuke_error = errorCallback;
 	PhoneGap.exec("store", ["nuke"]);
 }
-if (typeof navigator.store == "undefined") navigator.store = new Store();
-/**
+if (typeof navigator.store == "undefined") navigator.store = new Store();/**
  * This class provides access to the telephony features of the device.
  * @constructor
  */
